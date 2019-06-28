@@ -1,21 +1,106 @@
-// heap.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include "pch.h"
-#include <iostream>
+#include "Heap.h"
+#include <algorithm>
 
-int main()
+Heap::Heap()
 {
-    std::cout << "Hello World!\n"; 
+	heap.resize(CAPACITY);
+	sortedHeap.resize(CAPACITY);
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+Heap::~Heap()
+{
+}
+
+void Heap::insert(int item)
+{
+	// we are not able to insert more items than the value of the capacity
+	if (isHeapFull())
+		throw std::overflow_error("Heap is full");
+
+	//insert the item and increment the counter
+	heap[heapSize] = item;
+	++heapSize;
+
+	// we insert the item to the last position of the array
+	// then we restore up the heap
+	fixUp(heapSize - 1);
+}
+
+int Heap::getMax() const
+{
+	if (heapSize == 0)
+		throw std::length_error("Heap is empty");
+
+	return heap[0];
+}
+
+int Heap::poll()
+{
+	int max = getMax();
+
+	std::swap(heap[0], heap[heapSize - 1]);
+	--heapSize;
+
+	fixDown(0);
+	return max;
+}  
+
+std::vector<int> Heap::heapsort()
+{
+	int size = heapSize;
+
+	for (auto i = 0; i < size; i++) {
+		sortedHeap[i] = poll();
+	}
+
+	return sortedHeap;
+}
+
+void Heap::fixUp(int index)
+{
+	// the parent index of the given node in the heap
+	// we store the heap in an array
+	int parentIndex = (index - 1) / 2;
+
+	// while the inx > 0 means until we consider ll the items above the one we insterted
+	// we have to swap the node witht the parent if the heap property is violated
+	// it is a max heap so the max is located at the root node
+	if (index > 0 && heap[index] > heap[parentIndex]) {
+	std::swap(heap[index], heap[parentIndex]);
+		fixUp(parentIndex);
+	}
+}
+
+void Heap::fixDown(int index)
+{
+	// every node has a left and right child
+	// for a given node i the left child is 2*i+1 and the right child is 2*i+2
+	int indexLeft = 2 * index + 1;
+	int indexRight = 2 * index + 2;
+
+	// max heap so the parent node is always greater than the children
+	int indexLargest = index;
+
+	// if the left child is greater than the parent: largest is the left node
+	if (indexLeft < heapSize && heap[indexLargest] < heap[indexLeft]) {
+		indexLargest = indexLeft;
+	}
+
+	// if the right child is greater than the parent: largest is the right node
+	if (indexRight < heapSize && heap[indexRight] > heap[indexLargest]) {
+		indexLargest = indexRight;
+	}
+
+	// we do not want to swap items with themselves
+	if (indexLargest != index) {
+		std::swap(heap[index], heap[indexLargest]);
+		fixDown(indexLargest);
+	}
+}
+
+bool Heap::isHeapFull() const
+{
+	return CAPACITY == heapSize;
+}
